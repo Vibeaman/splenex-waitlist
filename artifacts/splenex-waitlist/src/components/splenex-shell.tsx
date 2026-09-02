@@ -27,11 +27,7 @@ export function Topbar({ admin = false }: { admin?: boolean }) {
           </span>
           Online
         </span>
-        {location !== '/admin' ? (
-          <Link href="/admin" className="focus-ring mono inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground" data-testid="link-admin">
-            Admin <ArrowUpRight size={13} strokeWidth={1.5} />
-          </Link>
-        ) : (
+        {location === '/admin' && (
           <Link href="/" className="focus-ring mono inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground" data-testid="link-public">
             Public <ArrowUpRight size={13} strokeWidth={1.5} />
           </Link>
