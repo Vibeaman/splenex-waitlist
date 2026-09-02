@@ -44,5 +44,5 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Vercel build output
-.vercel/output
+# Vercel build output cache
+.vercel/output/.gitkeep
