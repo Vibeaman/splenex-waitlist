@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: waitlist
+    description: Splenex waitlist operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,71 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /waitlist:
+    get:
+      operationId: listWaitlistEntries
+      tags: [waitlist]
+      summary: List waitlist entries
+      description: Returns recent waitlist submissions for the admin surface.
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Waitlist entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WaitlistEntry"
+    post:
+      operationId: createWaitlistEntry
+      tags: [waitlist]
+      summary: Join the Splenex waitlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WaitlistEntryInput"
+      responses:
+        "201":
+          description: Waitlist entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaitlistEntry"
+        "409":
+          description: Email or username already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /waitlist/summary:
+    get:
+      operationId: getWaitlistSummary
+      tags: [waitlist]
+      summary: Get waitlist summary
+      description: Returns aggregate waitlist metrics for the admin surface.
+      responses:
+        "200":
+          description: Waitlist summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaitlistSummary"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +100,69 @@ components:
           type: string
       required:
         - status
+    WaitlistEntry:
+      type: object
+      properties:
+        id:
+          type: number
+        email:
+          type: string
+          pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        twitterUsername:
+          type: string
+        xFollowed:
+          type: boolean
+        telegramJoined:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - twitterUsername
+        - xFollowed
+        - telegramJoined
+        - createdAt
+    WaitlistEntryInput:
+      type: object
+      properties:
+        email:
+          type: string
+          pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+        twitterUsername:
+          type: string
+          minLength: 2
+        xFollowed:
+          type: boolean
+        telegramJoined:
+          type: boolean
+      required:
+        - email
+        - twitterUsername
+        - xFollowed
+        - telegramJoined
+    WaitlistSummary:
+      type: object
+      properties:
+        total:
+          type: number
+        joinedToday:
+          type: number
+        xCompleted:
+          type: number
+        telegramCompleted:
+          type: number
+      required:
+        - total
+        - joinedToday
+        - xCompleted
+        - telegramCompleted
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
 

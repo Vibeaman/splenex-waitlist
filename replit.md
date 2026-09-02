@@ -1,6 +1,6 @@
-# [Project name]
+# Splenex Waitlist
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A task-gated waitlist for Splenex that collects early-access requests after visitors join the project's X and Telegram communities.
 
 ## Run & Operate
 
@@ -22,23 +22,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/splenex-waitlist/src/pages/home.tsx` — public task-gated signup flow
+- `artifacts/splenex-waitlist/src/pages/admin.tsx` — internal submissions view
+- `artifacts/splenex-waitlist/src/index.css` — Splenex visual tokens and motion
+- `lib/api-spec/openapi.yaml` — source of truth for waitlist API contracts
+- `lib/db/src/schema/waitlist.ts` — source of truth for persisted entries
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- External task completion is modeled as an explicit user confirmation after opening each destination, leaving a clean seam for later platform verification.
+- Email and X username are unique at the database layer; usernames are normalized before persistence.
+- The admin route intentionally uses the same generated client hooks as the public form so it reflects live server data.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- The public `/` route guides visitors through the two required social tasks before unlocking the X username and email form.
+- The `/admin` route shows aggregate metrics, searchable submissions, empty/loading/error states, and CSV export.
+- The API stores normalized waitlist entries with X and Telegram completion flags and exposes list, create, and summary endpoints.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Keep the visual language close to the supplied references: almost-black surfaces, signal yellow, white type, thin borders, and restrained motion.
+- The experience should feel natural and intentional rather than "vibecoded"; Supabase integration/auth can be added later.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The current social-task gate is user-confirmed after opening each destination; platform/API verification is intentionally left for the Supabase follow-up.
+- The generated Zod client in this workspace is pinned to Zod 3, so OpenAPI integer/email formats can emit unsupported Zod 4 helpers; waitlist IDs/counts use number and emails use a regex pattern.
 
 ## Pointers
 

@@ -1,0 +1,1 @@
+- [Zod codegen compatibility](zod-codegen-compatibility.md) — keep generated validation helpers compatible with the workspace's pinned Zod version.
