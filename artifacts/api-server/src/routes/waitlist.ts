@@ -61,11 +61,18 @@ router.post("/waitlist", async (req, res): Promise<void> => {
 
     res.status(201).json(CreateWaitlistEntryResponse.parse(entry));
   } catch (error) {
-    const message =
-      error && typeof error === "object" && "message" in error
-        ? String(error.message)
-        : "";
-    if (message.includes("duplicate key value")) {
+    const isDuplicate = (err: unknown): boolean => {
+      if (!err || typeof err !== "object") {
+        return false;
+      }
+      const obj = err as { message?: unknown; code?: unknown; cause?: unknown };
+      return (
+        (typeof obj.message === "string" && obj.message.includes("duplicate key value")) ||
+        obj.code === "23505" ||
+        isDuplicate(obj.cause)
+      );
+    };
+    if (isDuplicate(error)) {
       req.log.info("Rejected duplicate waitlist entry");
       res
         .status(409)
