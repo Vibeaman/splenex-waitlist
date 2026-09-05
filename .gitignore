@@ -45,4 +45,4 @@ Thumbs.db
 .github/instructions/nx.instructions.md
 
 # Vercel build output cache
-.vercel/output/.gitkeep
+.vercel/output/
