@@ -28,6 +28,7 @@ router.get("/waitlist", async (req, res): Promise<void> => {
         ? or(
             ilike(waitlistEntriesTable.email, `%${search}%`),
             ilike(waitlistEntriesTable.twitterUsername, `%${search}%`),
+            ilike(waitlistEntriesTable.telegramUsername, `%${search}%`),
           )
         : undefined,
     )
@@ -47,6 +48,7 @@ router.post("/waitlist", async (req, res): Promise<void> => {
 
   const email = parsedBody.data.email.trim().toLowerCase();
   const twitterUsername = parsedBody.data.twitterUsername.trim().replace(/^@/, "");
+  const telegramUsername = parsedBody.data.telegramUsername.trim().replace(/^@/, "");
 
   try {
     const [entry] = await db
@@ -54,6 +56,7 @@ router.post("/waitlist", async (req, res): Promise<void> => {
       .values({
         email,
         twitterUsername,
+        telegramUsername,
         xFollowed: parsedBody.data.xFollowed,
         telegramJoined: parsedBody.data.telegramJoined,
       })
@@ -76,7 +79,7 @@ router.post("/waitlist", async (req, res): Promise<void> => {
       req.log.info("Rejected duplicate waitlist entry");
       res
         .status(409)
-        .json({ error: "That email or X username is already on the list." });
+        .json({ error: "That email, X username, or Telegram username is already on the list." });
       return;
     }
 

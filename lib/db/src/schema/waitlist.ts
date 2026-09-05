@@ -15,6 +15,7 @@ export const waitlistEntriesTable = pgTable(
     id: serial("id").primaryKey(),
     email: text("email").notNull(),
     twitterUsername: text("twitter_username").notNull(),
+    telegramUsername: text("telegram_username").notNull(),
     xFollowed: boolean("x_followed").notNull().default(false),
     telegramJoined: boolean("telegram_joined").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -25,6 +26,9 @@ export const waitlistEntriesTable = pgTable(
     uniqueIndex("waitlist_entries_email_idx").on(table.email),
     uniqueIndex("waitlist_entries_twitter_username_idx").on(
       table.twitterUsername,
+    ),
+    uniqueIndex("waitlist_entries_telegram_username_idx").on(
+      table.telegramUsername,
     ),
   ],
 );

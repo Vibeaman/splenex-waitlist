@@ -110,6 +110,8 @@ components:
           pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
         twitterUsername:
           type: string
+        telegramUsername:
+          type: string
         xFollowed:
           type: boolean
         telegramJoined:
@@ -121,6 +123,7 @@ components:
         - id
         - email
         - twitterUsername
+        - telegramUsername
         - xFollowed
         - telegramJoined
         - createdAt
@@ -133,6 +136,9 @@ components:
         twitterUsername:
           type: string
           minLength: 2
+        telegramUsername:
+          type: string
+          minLength: 2
         xFollowed:
           type: boolean
         telegramJoined:
@@ -140,6 +146,7 @@ components:
       required:
         - email
         - twitterUsername
+        - telegramUsername
         - xFollowed
         - telegramJoined
     WaitlistSummary:

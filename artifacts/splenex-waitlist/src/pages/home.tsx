@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { ArrowRight, Check, Circle, ExternalLink, Mail, UserRound, X } from 'lucide-react';
+import { ArrowRight, Check, Circle, ExternalLink, Mail, Send, UserRound, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetWaitlistSummaryQueryKey, getListWaitlistEntriesQueryKey, useCreateWaitlistEntry } from '@workspace/api-client-react';
 import type { WaitlistEntryInput } from '@workspace/api-client-react';
@@ -19,8 +19,9 @@ function errorText(error: unknown) {
   return 'Something interrupted the request. Please try again.';
 }
 
-function TaskCard({ task, visited, complete, onVisit, onConfirm }: {
+function TaskField({ task, step, visited, complete, onVisit, onConfirm }: {
   task: TaskKey;
+  step: string;
   visited: boolean;
   complete: boolean;
   onVisit: () => void;
@@ -28,19 +29,18 @@ function TaskCard({ task, visited, complete, onVisit, onConfirm }: {
 }) {
   const isX = task === 'x';
   return (
-    <div className={`group relative flex flex-col justify-between border p-5 transition-colors duration-300 sm:p-6 ${complete ? 'border-primary/70 bg-primary/[0.04]' : 'border-border bg-card/30 hover:border-muted-foreground/50'}`} data-testid={`card-task-${task}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className={`grid h-10 w-10 place-items-center border ${complete ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground'}`}>
-          {isX ? <X size={18} strokeWidth={1.7} /> : <span className="text-lg font-semibold">T</span>}
+    <div className={`flex flex-col gap-4 border p-5 transition-colors duration-300 sm:flex-row sm:items-center sm:justify-between sm:p-6 ${complete ? 'border-primary/70 bg-primary/[0.04]' : 'border-border bg-card/30'}`} data-testid={`field-task-${task}`}>
+      <div className="flex items-start gap-4">
+        <span className={`grid h-10 w-10 shrink-0 place-items-center border ${complete ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground'}`} aria-hidden="true">
+          {isX ? <X size={18} strokeWidth={1.7} /> : <Send size={17} strokeWidth={1.7} />}
+        </span>
+        <div>
+          <p className="mono text-[10px] uppercase tracking-[0.17em] text-muted-foreground">Step {step}</p>
+          <label htmlFor={`task-${task}`} className="mt-1 block text-lg font-medium tracking-[-0.03em] text-foreground">{isX ? 'Follow @Splenex on X' : 'Join the Telegram channel'}</label>
+          <p className="mt-1 max-w-[42ch] text-sm leading-6 text-muted-foreground">{isX ? 'Follow for research notes, product drops, and the first read.' : 'Quiet room, high-signal conversation. Join before you continue.'}</p>
         </div>
-        {complete ? <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground animate-stamp"><Check size={14} strokeWidth={2.5} /></span> : <Circle size={17} className="text-muted-foreground" />}
       </div>
-      <div className="mt-8">
-        <p className="mono text-[10px] uppercase tracking-[0.17em] text-muted-foreground">Signal {isX ? '01' : '02'}</p>
-        <h3 className="mt-2 text-lg font-medium tracking-[-0.03em] text-foreground">{isX ? 'Follow the signal' : 'Enter the channel'}</h3>
-        <p className="mt-2 max-w-[28ch] text-sm leading-6 text-muted-foreground">{isX ? 'Follow @Splenex on X for research notes, product drops, and the first read.' : 'Join the Splenex Telegram channel. Quiet room, high-signal conversation.'}</p>
-      </div>
-      <div className="mt-7 flex items-center justify-between gap-3 border-t border-border pt-4">
+      <div className="flex items-center justify-between gap-4 border-t border-border pt-4 sm:flex-col sm:items-end sm:gap-3 sm:border-t-0 sm:pt-0">
         <a
           href={isX ? X_DESTINATION : TELEGRAM_DESTINATION}
           target="_blank"
@@ -51,10 +51,10 @@ function TaskCard({ task, visited, complete, onVisit, onConfirm }: {
         >
           Open {isX ? 'X' : 'Telegram'} <ExternalLink size={13} strokeWidth={1.5} />
         </a>
-        <label className={`flex cursor-pointer items-center gap-2 text-[10px] uppercase tracking-[0.1em] ${visited ? 'text-foreground' : 'cursor-not-allowed text-muted-foreground/50'}`}>
-          <input type="checkbox" checked={complete} onChange={onConfirm} disabled={!visited || complete} className="sr-only" data-testid={`checkbox-task-${task}`} />
-          <span className={`grid h-4 w-4 place-items-center border transition-colors ${complete ? 'border-primary bg-primary text-primary-foreground' : visited ? 'border-muted-foreground group-hover:border-primary' : 'border-border'}`}>{complete && <Check size={11} strokeWidth={3} />}</span>
-          Confirmed
+        <label htmlFor={`task-${task}`} className={`flex cursor-pointer items-center gap-2 text-[10px] uppercase tracking-[0.1em] ${visited ? 'text-foreground' : 'cursor-not-allowed text-muted-foreground/50'}`}>
+          <input id={`task-${task}`} name={`task-${task}`} type="checkbox" checked={complete} onChange={onConfirm} disabled={!visited || complete} className="sr-only" data-testid={`checkbox-task-${task}`} />
+          <span className={`grid h-4 w-4 place-items-center border transition-colors ${complete ? 'border-primary bg-primary text-primary-foreground' : visited ? 'border-muted-foreground' : 'border-border'}`}>{complete && <Check size={11} strokeWidth={3} />}</span>
+          {complete ? 'Confirmed' : 'Confirm'}
         </label>
       </div>
     </div>
@@ -65,7 +65,7 @@ export default function Home() {
   const queryClient = useQueryClient();
   const [visited, setVisited] = useState<Record<TaskKey, boolean>>({ x: false, telegram: false });
   const [confirmed, setConfirmed] = useState<Record<TaskKey, boolean>>({ x: false, telegram: false });
-  const [form, setForm] = useState({ twitterUsername: '', email: '' });
+  const [form, setForm] = useState({ twitterUsername: '', telegramUsername: '', email: '' });
   const [submitted, setSubmitted] = useState(false);
   const [fieldError, setFieldError] = useState('');
   const createEntry = useCreateWaitlistEntry();
@@ -75,7 +75,10 @@ export default function Home() {
   }, []);
 
   const unlocked = confirmed.x && confirmed.telegram;
-  const formReady = unlocked && form.twitterUsername.trim().length >= 2 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+  const formReady = unlocked
+    && form.twitterUsername.trim().length >= 2
+    && form.telegramUsername.trim().length >= 2
+    && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const progress = useMemo(() => (Number(visited.x) + Number(visited.telegram) + Number(confirmed.x) + Number(confirmed.telegram)) / 4, [visited, confirmed]);
 
   const markVisited = (task: TaskKey) => setVisited((current) => ({ ...current, [task]: true }));
@@ -92,6 +95,10 @@ export default function Home() {
       setFieldError('Enter your X username.');
       return;
     }
+    if (form.telegramUsername.trim().length < 2) {
+      setFieldError('Enter your Telegram username.');
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       setFieldError('Enter a valid email address.');
       return;
@@ -99,6 +106,7 @@ export default function Home() {
     const payload: WaitlistEntryInput = {
       email: form.email.trim(),
       twitterUsername: form.twitterUsername.trim().replace(/^@/, ''),
+      telegramUsername: form.telegramUsername.trim().replace(/^@/, ''),
       xFollowed: confirmed.x,
       telegramJoined: confirmed.telegram,
     };
@@ -120,7 +128,7 @@ export default function Home() {
               <div>
                 <SectionEyebrow icon={<Check size={13} />}>Access request received</SectionEyebrow>
                 <h1 className="mt-7 max-w-[11ch] text-5xl font-semibold leading-[0.95] tracking-[-0.065em] sm:text-7xl">You’re on the inside track.</h1>
-                <p className="mt-7 max-w-[49ch] text-base leading-7 text-muted-foreground">We’ll use the email you shared for the first dispatch. Keep an eye on the channel — the next signal won’t be broadcast twice.</p>
+                <p className="mt-7 max-w-[49ch] text-base leading-7 text-muted-foreground">We’ll use the email you shared for the first dispatch. Keep an eye on the channel, the next signal won’t be broadcast twice.</p>
               </div>
               <div className="shrink-0 border-l border-primary/40 pl-5 sm:mt-8">
                 <span className="mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Status</span>
@@ -156,38 +164,60 @@ export default function Home() {
         </section>
 
         <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
-          <div className="grid gap-10 lg:grid-cols-[.72fr_1.28fr] lg:gap-20">
-            <div className="animate-rise delay-1">
-              <SectionEyebrow>01 / Establish access</SectionEyebrow>
-              <h2 className="mt-5 max-w-[12ch] text-3xl font-medium leading-tight tracking-[-0.05em] sm:text-4xl">Two signals. One doorway.</h2>
-              <p className="mt-5 max-w-[31ch] text-sm leading-6 text-muted-foreground">We keep the first room close. Follow the project, enter the conversation, then leave a line for the invite.</p>
-              <div className="mt-8"><LockedLabel /></div>
+          <div className="flex flex-col justify-between gap-6 border-b border-border pb-9 sm:flex-row sm:items-end">
+            <div>
+              <SectionEyebrow icon={<UserRound size={13} />}>Request access</SectionEyebrow>
+              <h2 className="mt-5 max-w-[16ch] text-3xl font-medium leading-tight tracking-[-0.05em] sm:text-4xl">One form. Three steps. One doorway.</h2>
+              <p className="mt-5 max-w-[52ch] text-sm leading-6 text-muted-foreground">Follow the project, enter the conversation, then leave your coordinates for the invite.</p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TaskCard task="x" visited={visited.x} complete={confirmed.x} onVisit={() => markVisited('x')} onConfirm={() => markConfirmed('x')} />
-              <TaskCard task="telegram" visited={visited.telegram} complete={confirmed.telegram} onVisit={() => markVisited('telegram')} onConfirm={() => markConfirmed('telegram')} />
-            </div>
+            <div className="flex w-full max-w-[220px] items-center gap-3"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${Math.max(8, progress * 100)}%` }} /></div><span className="mono text-[10px] text-muted-foreground">{unlocked ? 'OPEN' : `${Math.round(progress * 100)}%`}</span></div>
           </div>
-        </section>
 
-        <section className="border-y border-border bg-card/20 px-5 py-16 sm:px-8 sm:py-20 lg:px-12">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-              <div><SectionEyebrow icon={<UserRound size={13} />}>02 / Your coordinates</SectionEyebrow><h2 className="mt-5 text-3xl font-medium tracking-[-0.05em] sm:text-4xl">Leave a trace.</h2></div>
-              <div className="flex w-full max-w-[220px] items-center gap-3"><div className="h-1 flex-1 bg-muted"><div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${Math.max(8, progress * 100)}%` }} /></div><span className="mono text-[10px] text-muted-foreground">{unlocked ? 'OPEN' : `${Math.round(progress * 100)}%`}</span></div>
-            </div>
-            <form onSubmit={submit} className={`mt-10 grid gap-5 transition-opacity duration-500 ${unlocked ? 'opacity-100' : 'opacity-55'}`} data-testid="form-waitlist">
-              <div className="grid gap-5 sm:grid-cols-2">
-                <label className="block"><span className="mono mb-2 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">X username</span><div className="flex items-center border-b border-input transition-colors focus-within:border-primary"><span className="mono text-sm text-muted-foreground">@</span><input value={form.twitterUsername} onChange={(e) => setForm((current) => ({ ...current, twitterUsername: e.target.value }))} disabled={!unlocked || createEntry.isPending} className="focus-ring w-full bg-transparent px-2 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50" placeholder="yourhandle" data-testid="input-twitter-username" /></div></label>
-                <label className="block"><span className="mono mb-2 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Email address</span><div className="flex items-center border-b border-input transition-colors focus-within:border-primary"><Mail size={15} className="text-muted-foreground" /><input type="email" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} disabled={!unlocked || createEntry.isPending} className="focus-ring w-full bg-transparent px-2 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50" placeholder="you@domain.com" data-testid="input-email" /></div></label>
+          <form onSubmit={submit} className="mt-10 grid gap-10" data-testid="form-waitlist">
+            <fieldset className="grid gap-4">
+              <legend className="mono mb-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-primary"><span className="grid h-5 w-5 place-items-center border border-primary/60 text-[10px]">1</span>Establish access</legend>
+              <TaskField task="x" step="01" visited={visited.x} complete={confirmed.x} onVisit={() => markVisited('x')} onConfirm={() => markConfirmed('x')} />
+              <TaskField task="telegram" step="02" visited={visited.telegram} complete={confirmed.telegram} onVisit={() => markVisited('telegram')} onConfirm={() => markConfirmed('telegram')} />
+              {!unlocked && <div className="pt-1"><LockedLabel /></div>}
+            </fieldset>
+
+            <fieldset className={`grid gap-5 border-t border-border pt-8 transition-opacity duration-500 ${unlocked ? 'opacity-100' : 'opacity-55'}`}>
+              <legend className="mono mb-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-primary"><span className="grid h-5 w-5 place-items-center border border-primary/60 text-[10px]">2</span>Leave your coordinates</legend>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <label className="block" htmlFor="input-twitter-username">
+                  <span className="mono mb-2 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">X username</span>
+                  <div className="flex items-center border-b border-input transition-colors focus-within:border-primary">
+                    <span className="mono text-sm text-muted-foreground">@</span>
+                    <input id="input-twitter-username" name="twitterUsername" value={form.twitterUsername} onChange={(e) => setForm((current) => ({ ...current, twitterUsername: e.target.value }))} disabled={!unlocked || createEntry.isPending} className="focus-ring w-full bg-transparent px-2 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50" placeholder="yourhandle" data-testid="input-twitter-username" />
+                  </div>
+                </label>
+                <label className="block" htmlFor="input-telegram-username">
+                  <span className="mono mb-2 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Telegram username</span>
+                  <div className="flex items-center border-b border-input transition-colors focus-within:border-primary">
+                    <span className="mono text-sm text-muted-foreground">@</span>
+                    <input id="input-telegram-username" name="telegramUsername" value={form.telegramUsername} onChange={(e) => setForm((current) => ({ ...current, telegramUsername: e.target.value }))} disabled={!unlocked || createEntry.isPending} className="focus-ring w-full bg-transparent px-2 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50" placeholder="yourhandle" data-testid="input-telegram-username" />
+                  </div>
+                </label>
+                <label className="block" htmlFor="input-email">
+                  <span className="mono mb-2 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Email address</span>
+                  <div className="flex items-center border-b border-input transition-colors focus-within:border-primary">
+                    <Mail size={15} className="text-muted-foreground" />
+                    <input id="input-email" name="email" type="email" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} disabled={!unlocked || createEntry.isPending} className="focus-ring w-full bg-transparent px-2 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50" placeholder="you@domain.com" data-testid="input-email" />
+                  </div>
+                </label>
               </div>
               <div className="flex flex-col items-start justify-between gap-5 border-t border-border pt-5 sm:flex-row sm:items-center">
-                <div className="text-xs text-muted-foreground">{!unlocked ? <LockedLabel /> : <span className="flex items-center gap-2 text-primary"><Check size={14} /> Access verified. You may continue.</span>}{fieldError && <p className="mt-2 text-destructive" data-testid="status-form-error">{fieldError}</p>}{createEntry.isError && <p className="mt-2 max-w-md text-destructive" data-testid="status-submit-error">{errorText(createEntry.error).toLowerCase().includes('duplicate') ? 'That email or username is already on the list.' : errorText(createEntry.error)}</p>}</div>
+                <div className="text-xs text-muted-foreground">
+                  {!unlocked ? <LockedLabel /> : <span className="flex items-center gap-2 text-primary"><Check size={14} /> Access verified. You may continue.</span>}
+                  {fieldError && <p className="mt-2 text-destructive" data-testid="status-form-error">{fieldError}</p>}
+                  {createEntry.isError && <p className="mt-2 max-w-md text-destructive" data-testid="status-submit-error">{errorText(createEntry.error).toLowerCase().includes('already') ? 'That email, X username, or Telegram username is already on the list.' : errorText(createEntry.error)}</p>}
+                </div>
                 <button type="submit" disabled={!formReady || createEntry.isPending} className="focus-ring button-signal inline-flex w-full items-center justify-center gap-3 bg-primary px-6 py-3 text-sm font-medium text-primary-foreground sm:w-auto" data-testid="button-submit-waitlist">{createEntry.isPending ? 'Securing your place…' : 'Request access'} <ArrowRight size={16} /></button>
               </div>
-            </form>
-          </div>
+            </fieldset>
+          </form>
         </section>
+
         <section className="mx-auto grid max-w-6xl gap-8 px-5 py-16 sm:px-8 sm:py-24 md:grid-cols-3 lg:px-12">
           {['A considered read on volatile markets.', 'Research that respects your attention.', 'A private channel for the early signal.'].map((text, index) => <div key={text} className="border-t border-border pt-4"><span className="mono text-[10px] text-primary">0{index + 1}</span><p className="mt-4 max-w-[18ch] text-lg leading-6 tracking-[-0.03em] text-foreground">{text}</p></div>)}
         </section>

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 export function SplenexMark({ compact = false }: { compact?: boolean }) {
   return (
     <Link href="/" className="focus-ring inline-flex items-center gap-2" data-testid="link-home">
-      <span className="grid h-7 w-7 place-items-center border border-primary/70 text-[11px] font-bold text-primary" aria-hidden="true">S</span>
+      <img src="/splenex-mark.png" alt="Splenex" className="h-7 w-auto" aria-hidden="true" />
       {!compact && <span className="text-[15px] font-semibold tracking-[-0.04em] text-foreground">SPLENEX</span>}
     </Link>
   );
