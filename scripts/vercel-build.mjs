@@ -27,6 +27,18 @@ await cp(
   { recursive: true },
 );
 
+// Also mirror the static output to a top-level "public" folder. Some Vercel
+// project configurations ignore the Build Output API (.vercel/output) and
+// fall back to looking for a conventional Output Directory. Without this,
+// those deployments fail with STATIC_BUILD_NO_OUT_DIR even though the real
+// build succeeded.
+await rm(path.join(root, "public"), { recursive: true, force: true });
+await cp(
+  path.join(root, "artifacts/splenex-waitlist/dist/public"),
+  path.join(root, "public"),
+  { recursive: true },
+);
+
 await cp(
   path.join(root, "artifacts/api-server/dist/vercel.mjs"),
   path.join(functionDir, "index.mjs"),
